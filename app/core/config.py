@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    
+    @computed_field
+    @property
+    def DATABASE_SYNC_URL(self) -> str:
+        return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # REDIS
     REDIS_URL: str = "redis://localhost:6379/0"
