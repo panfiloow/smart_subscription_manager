@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.user import User
@@ -13,7 +14,7 @@ class CRUDUser:
         result = await db.execute(query)
         return result.scalar_one_or_none()
     
-    async def get(self, db: AsyncSession, id: int) -> Optional[User]:
+    async def get(self, db: AsyncSession, id: uuid.UUID) -> Optional[User]:
         """Найти пользователя по ID"""
         query = select(User).where(User.id == id)
         result = await db.execute(query)
