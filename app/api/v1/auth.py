@@ -8,10 +8,6 @@ from app.models.user import User
 auth_router = APIRouter(prefix="/v1/auth", tags=["Auth"])
 
 
-def fake_hash(password: str) -> str:
-    return f"fakehash{password}"
-
-
 @auth_router.post(
     "/register",
     response_model=UserRead,
@@ -26,7 +22,7 @@ async def register_user(user_data: UserCreate, db: AsyncSession = Depends(get_db
             status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
         )
 
-    hashed_password = fake_hash(user_data.password)
+    hashed_password = user_data.password
     new_user = User(email=user_data.email, hashed_password=hashed_password)
     db.add(new_user)
     await db.commit()
