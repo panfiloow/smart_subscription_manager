@@ -3,6 +3,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # APP
+    API_V1_STR: str = "/api/v1"
+
     # Postgres
     POSTGRES_DB: str
     POSTGRES_USER: str
@@ -22,8 +25,8 @@ class Settings(BaseSettings):
 
     # REDIS
     REDIS_URL: str = "redis://localhost:6379/0"
-    
-    #JWT
+
+    # JWT
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
