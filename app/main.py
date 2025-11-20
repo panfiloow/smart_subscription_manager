@@ -4,9 +4,9 @@ from sqlalchemy import text
 from app.db.session import engine
 from app.api.v1.auth import auth_router
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Код, который выполняется при старте приложения
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
@@ -16,7 +16,6 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # Код, который выполняется при выключении (если нужно закрыть пул)
     await engine.dispose()
 
 
@@ -26,3 +25,4 @@ app.include_router(auth_router)
 @app.get("/")
 def read_root():
     return {"message": "Subscription Manager API is running"}
+
