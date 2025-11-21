@@ -29,6 +29,15 @@ class SubscriptionUpdate(BaseModel):
     payment_date: Optional[int] = None
     is_active: Optional[bool] = None
     
+    @field_validator('payment_date')
+    @classmethod
+    def validate_day(cls, v: Optional[int]) -> Optional[int]:
+        if v is None:
+            return v
+        if not (1 <= v <= 31):
+            raise ValueError('Day must be between 1 and 31')
+        return v
+    
 
 class SubscriptionRead(SubscriptionBase):
     id: int
