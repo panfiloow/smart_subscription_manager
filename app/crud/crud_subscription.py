@@ -33,13 +33,13 @@ class CRUDSubscription:
         query = select(Subscription).where(Subscription.id == id)
         result = await db.execute(query)
         return result.scalar_one_or_none()
-    
+
     async def update(
-        self, 
-        db: AsyncSession, 
-        *, 
-        db_obj: Subscription, 
-        obj_in: SubscriptionUpdate | dict
+        self,
+        db: AsyncSession,
+        *,
+        db_obj: Subscription,
+        obj_in: SubscriptionUpdate | dict,
     ) -> Subscription:
         """
         Обновление полей подписки.
@@ -58,16 +58,17 @@ class CRUDSubscription:
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
-    
+
     async def remove(self, db: AsyncSession, *, id: int) -> Subscription:
         """Удаление подписки по ID"""
         query = select(Subscription).where(Subscription.id == id)
         result = await db.execute(query)
         obj = result.scalar_one_or_none()
-        
+
         if obj:
             await db.delete(obj)
             await db.commit()
         return obj
+
 
 subscription = CRUDSubscription()

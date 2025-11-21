@@ -4,7 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.crud import crud_subscription
-from app.schemas.subscription import SubscriptionCreate, SubscriptionRead, SubscriptionUpdate
+from app.schemas.subscription import (
+    SubscriptionCreate,
+    SubscriptionRead,
+    SubscriptionUpdate,
+)
 from app.models.user import User
 
 router = APIRouter()
@@ -32,6 +36,7 @@ async def read_subscriptions(
         db=db, user_id=current_user.id, skip=skip, limit=limit
     )
 
+
 @router.get("/{subscription_id}", response_model=SubscriptionRead)
 async def read_subscription(
     subscription_id: int,
@@ -42,14 +47,15 @@ async def read_subscription(
     Получить конкретную подписку по ID.
     """
     subscription = await crud_subscription.subscription.get(db, id=subscription_id)
-    
+
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
-    
+
     if subscription.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Subscription not found")
-        
+
     return subscription
+
 
 @router.put("/{subscription_id}", response_model=SubscriptionRead)
 async def update_subscription(
@@ -62,10 +68,10 @@ async def update_subscription(
     Обновить подписку.
     """
     subscription = await crud_subscription.subscription.get(db, id=subscription_id)
-    
+
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
-    
+
     if subscription.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Subscription not found")
 
@@ -73,6 +79,7 @@ async def update_subscription(
         db, db_obj=subscription, obj_in=subscription_in
     )
     return subscription
+
 
 @router.delete("/{subscription_id}", response_model=SubscriptionRead)
 async def delete_subscription(
@@ -84,10 +91,10 @@ async def delete_subscription(
     Удалить подписку.
     """
     subscription = await crud_subscription.subscription.get(db, id=subscription_id)
-    
+
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
-    
+
     if subscription.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Subscription not found")
 

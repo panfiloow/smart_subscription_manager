@@ -16,19 +16,17 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register_user(
-    user_in: UserCreate, 
-    db: AsyncSession = Depends(deps.get_db)
-):
+async def register_user(user_in: UserCreate, db: AsyncSession = Depends(deps.get_db)):
     user = await crud_user.user.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",
         )
-    
+
     user = await crud_user.user.create(db, obj_in=user_in)
     return user
+
 
 @router.post("/login", response_model=Token)
 async def login_user(
@@ -36,8 +34,10 @@ async def login_user(
     db: AsyncSession = Depends(deps.get_db),
 ):
     user = await crud_user.user.get_by_email(db, email=form_data.username)
-    
-    if not user or not security.verify_password(form_data.password, user.hashed_password):
+
+    if not user or not security.verify_password(
+        form_data.password, user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
