@@ -1,6 +1,6 @@
 from typing import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.subscription import Subscription
 from app.schemas.subscription import SubscriptionCreate, SubscriptionUpdate
 import uuid
@@ -69,6 +69,19 @@ class CRUDSubscription:
             await db.delete(obj)
             await db.commit()
         return obj
+
+    async def get_total_cost_by_currency(self, db: AsyncSession, *, user_id: uuid.UUID):
+        """
+        Возвращает список кортежей: [('RUB', 500), ('USD', 10.99), ('EUR', 5)]
+        """
+        query = (
+            select(Subscription.currency, func.sum(Subscription.price))
+            .where(Subscription.user_id == user_id)
+            .where(Subscription.is_active)
+            .group_by(Subscription.currency)
+        )
+        result = await db.execute(query)
+        return result.all()
 
 
 subscription = CRUDSubscription()

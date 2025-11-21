@@ -10,6 +10,8 @@ from app.schemas.subscription import (
     SubscriptionUpdate,
 )
 from app.models.user import User
+from app.services import analytics as analytics_service 
+from app.schemas.subscription import AnalyticsResponse
 
 router = APIRouter()
 
@@ -100,3 +102,15 @@ async def delete_subscription(
 
     await crud_subscription.subscription.remove(db, id=subscription_id)
     return subscription
+
+
+@router.get("/analytics/monthly", response_model=AnalyticsResponse)
+async def get_analytics(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Посчитать ежемесячные расходы.
+    """
+    data = await analytics_service.calculate_expenses(db, user_id=current_user.id)
+    return data
