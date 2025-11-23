@@ -56,3 +56,19 @@ class SubscriptionRead(SubscriptionBase):
 class AnalyticsResponse(BaseModel):
     total_monthly_price: Decimal = Field(..., description="Общая сумма в базовой валюте (RUB)")
     details: Dict[Currency, Decimal] = Field(..., description="Детализация по валютам")
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "total_monthly_price": 2550.50,
+                    "details": {
+                        "RUB": 299.00,
+                        "USD": 15.50,
+                        "EUR": 5.00,
+                        "KZT": 0.00
+                    }
+                }
+            ]
+        }
+    )
