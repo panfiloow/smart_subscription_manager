@@ -1,10 +1,9 @@
 from decimal import Decimal
 from typing import Sequence
 import uuid
-
-from fastapi import HTTPException
 from redis.asyncio import Redis
 
+from app.core.exceptions import SubscriptionNotFoundException
 from app.repositories.subscription_repository import SubscriptionRepository
 from app.schemas.subscription import (
     SubscriptionCreate,
@@ -52,10 +51,10 @@ class SubscriptionService:
         sub = await self.repo.get(sub_id)
 
         if not sub:
-            raise HTTPException(status_code=404, detail="Subscription not found")
+            raise SubscriptionNotFoundException()
 
         if sub.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Subscription not found")
+            raise SubscriptionNotFoundException()
 
         return sub
 
@@ -86,10 +85,13 @@ class SubscriptionService:
 
     async def calculate_analytics(self, user_id: uuid.UUID) -> AnalyticsResponse:
         cache_key = f"analytics:{user_id}"
-
-        cached_data = await self.redis.get(cache_key)
-        if cached_data:
-            return AnalyticsResponse.model_validate_json(cached_data)
+        try:
+            cached_data = await self.redis.get(cache_key)
+            if cached_data:
+                return AnalyticsResponse.model_validate_json(cached_data)
+        except Exception as e:
+            print(f"Redis error reading: {e}")
+            pass
 
         raw_totals = await self.repo.get_total_cost_by_currency(user_id)
 

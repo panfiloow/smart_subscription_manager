@@ -1,10 +1,11 @@
 from typing import Annotated, AsyncGenerator
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from redis import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
+from app.core.exceptions import TokenExpiredException
 from app.db.session import AsyncSessionLocal
 from app.models.user import User
 from app.repositories.subscription_repository import SubscriptionRepository
@@ -50,15 +51,10 @@ async def get_current_user(
     user_repo: UserRepository = Depends(get_user_repository),
     redis: aioredis.Redis = Depends(get_redis),
 ) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
 
     is_blacklisted = await redis.get(f"blacklist:{token}")
     if is_blacklisted:
-        raise credentials_exception
+        raise TokenExpiredException()
 
     try:
         payload = jwt.decode(
@@ -66,14 +62,14 @@ async def get_current_user(
         )
         username: str = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            raise TokenExpiredException()
     except jwt.InvalidTokenError:
-        raise credentials_exception
+        raise TokenExpiredException()
 
     user = await user_repo.get_by_email(email=username)
 
     if user is None:
-        raise credentials_exception
+        raise TokenExpiredException()
 
     return user
 

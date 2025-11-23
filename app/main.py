@@ -1,9 +1,16 @@
 from contextlib import asynccontextmanager
 import time
 from fastapi import FastAPI, Request
+from redis import RedisError
 from sqlalchemy import text
+from app.core.exception_handlers import (
+    db_exception_handler,
+    generic_exception_handler,
+    redis_exception_handler,
+)
 from app.db.session import engine
 from app.api.v1 import api_router
+from sqlalchemy.exc import SQLAlchemyError
 
 
 @asynccontextmanager
@@ -22,6 +29,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(api_router, prefix="/api/v1")
+app.add_exception_handler(SQLAlchemyError, db_exception_handler)
+app.add_exception_handler(RedisError, redis_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 
 # Время выполнения запроса
@@ -36,7 +46,7 @@ async def add_process_time_header(request: Request, call_next):
 
     return response
 
-
+# Приветствие
 @app.get("/")
 def read_root():
     return {"message": "Subscription Manager API is running"}

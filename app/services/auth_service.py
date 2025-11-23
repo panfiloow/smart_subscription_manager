@@ -1,8 +1,7 @@
-from fastapi import HTTPException, status
 from datetime import datetime, timedelta, timezone
-
 import jwt
 from redis import Redis
+from app.core.exceptions import InvalidCredentialsException, UserAlreadyExistsException
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate
 from app.schemas.token import Token
@@ -18,10 +17,7 @@ class AuthService:
     async def register_user(self, user_in: UserCreate):
         existing_user = await self.user_repo.get_by_email(user_in.email)
         if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already registered",
-            )
+            raise UserAlreadyExistsException()
 
         hashed_password = security.get_password_hash(user_in.password)
 
@@ -34,11 +30,7 @@ class AuthService:
         user = await self.user_repo.get_by_email(email)
 
         if not user or not security.verify_password(password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise InvalidCredentialsException()
 
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = security.create_access_token(
