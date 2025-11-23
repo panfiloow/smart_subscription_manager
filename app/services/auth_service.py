@@ -18,21 +18,24 @@ class AuthService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email already registered",
             )
-        
+
         hashed_password = security.get_password_hash(user_in.password)
-        
-        return await self.user_repo.create(user_in, hashed_password)
+
+        user = await self.user_repo.create(user_in, hashed_password)
+        await self.user_repo.session.commit()
+        await self.user_repo.session.refresh(user)
+        return user
 
     async def authenticate_user(self, email: str, password: str) -> Token:
         user = await self.user_repo.get_by_email(email)
-        
+
         if not user or not security.verify_password(password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-            
+
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = security.create_access_token(
             data={"sub": user.email}, expires_delta=access_token_expires
