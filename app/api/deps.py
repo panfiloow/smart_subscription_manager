@@ -40,19 +40,26 @@ def get_user_repository(session: AsyncSession = Depends(get_db)) -> UserReposito
 
 def get_auth_service(
     user_repo: UserRepository = Depends(get_user_repository),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> AuthService:
-    return AuthService(user_repo)
+    return AuthService(user_repo, redis)
 
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_repo: UserRepository = Depends(get_user_repository),
+    redis: aioredis.Redis = Depends(get_redis),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    is_blacklisted = await redis.get(f"blacklist:{token}")
+    if is_blacklisted:
+        raise credentials_exception
+
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

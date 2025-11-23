@@ -1,5 +1,8 @@
 from fastapi import HTTPException, status
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from redis import Redis
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate
 from app.schemas.token import Token
@@ -8,8 +11,9 @@ from app.core.config import settings
 
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository):
+    def __init__(self, user_repo: UserRepository, redis: Redis):
         self.user_repo = user_repo
+        self.redis = redis
 
     async def register_user(self, user_in: UserCreate):
         existing_user = await self.user_repo.get_by_email(user_in.email)
@@ -41,3 +45,20 @@ class AuthService:
             data={"sub": user.email}, expires_delta=access_token_expires
         )
         return Token(access_token=access_token, token_type="bearer")
+
+    async def logout(self, token: str):
+        try:
+            payload = jwt.decode(
+                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            )
+            exp = payload.get("exp")
+
+            if exp:
+                current_timestamp = datetime.now(timezone.utc).timestamp()
+                ttl = int(exp - current_timestamp)
+
+                if ttl > 0:
+                    await self.redis.set(f"blacklist:{token}", "true", ex=ttl)
+
+        except jwt.PyJWTError:
+            pass
