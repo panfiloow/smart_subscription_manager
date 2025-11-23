@@ -15,6 +15,7 @@ app.include_router(api_router, prefix="/api/v1")
 app.add_exception_handler(SQLAlchemyError, db_exception_handler)
 app.add_exception_handler(RedisError, redis_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
+app.add_exception_handler(OSError, db_exception_handler) 
 
 
 # Время выполнения запроса
