@@ -114,6 +114,10 @@ class SubscriptionService:
             details=details,
         )
 
-        await self.redis.set(cache_key, response.model_dump_json(), ex=600)
+        try:
+            await self.redis.set(cache_key, response.model_dump_json(), ex=600)
+        except Exception as e:
+            print(f"Redis error writing: {e}")
+
 
         return response
