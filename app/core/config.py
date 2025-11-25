@@ -24,7 +24,13 @@ class Settings(BaseSettings):
         return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # REDIS
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_HOST: str = "localhost" 
+    REDIS_PORT: int = 6379
+    
+    @computed_field
+    @property
+    def REDIS_URL(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
     # JWT
     SECRET_KEY: str
